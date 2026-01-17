@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 data class BottomItem(val route: String, val title: String, val icon: ImageVector)
 
 val bottomItems = listOf(
-    BottomItem("home", "Trang chủ", Icons.Default.Home),
-    BottomItem("cart", "Giỏ hàng", Icons.Default.ShoppingCart),
-    BottomItem("history", "Lịch sử", Icons.Default.List),
+    BottomItem("home", "Trang chủ", Icons.Filled.Home),
+    BottomItem("cart", "Giỏ hàng", Icons.Filled.ShoppingCart),
+    BottomItem("history", "Lịch sử", Icons.Filled.List),
 )
 
 @Composable

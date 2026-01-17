@@ -6,7 +6,8 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object ApiClient {
-    private const val BASE_URL = "http://192.168.0.104:8080/"
+    // Sử dụng 10.0.2.2 để kết nối từ máy ảo Android đến localhost của máy tính
+    private const val BASE_URL = "http://10.0.2.2:8080/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

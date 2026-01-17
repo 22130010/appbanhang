@@ -1,6 +1,7 @@
 package com.example.appbanhang.data.dto
 
 data class CreateOrderRequest(
+    val customerId: String,
     val fullName: String,
     val phone: String,
     val address: String,

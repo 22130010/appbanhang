@@ -5,74 +5,77 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.appbanhang.data.dto.OrderResponse
 import com.example.appbanhang.ui.viewModel.HistoryState
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+
+fun formatFirebaseDate(dateString: String): String {
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        formatter.format(parser.parse(dateString) as Date)
+    } catch (e: Exception) {
+        dateString
+    }
+}
 
 @Composable
 fun HistoryScreen(
     state: HistoryState,
     onReload: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        onReload()
+    }
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Lịch sử đơn hàng", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-
-        if (state.dangTai) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Lịch sử đặt hàng", style = MaterialTheme.typography.headlineMedium)
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onReload) {
+                // Thêm icon refresh nếu muốn
+            }
         }
-        state.loi?.let { Text("Lỗi: $it", color = MaterialTheme.colorScheme.error) }
+        Spacer(Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(state.orders) { order ->
-                Card {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Mã đơn: #${order.id}", style = MaterialTheme.typography.titleMedium)
-                        Text("Khách: ${order.fullName}")
-                        Text("Tổng tiền: ${order.totalAmount} VND")
-                        Text("Thanh toán: ${order.paymentMethod}")
-                        Spacer(Modifier.height(6.dp))
-                        order.items.forEach {
-                            Text("- ${it.productName} x${it.quantity} (${it.price} VND)")
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (state.error != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Lỗi: ${state.error}", color = MaterialTheme.colorScheme.error)
+            }
+        } else if (state.orders.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Chưa có đơn hàng nào.")
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(state.orders) { order ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Mã đơn: ${order.id}", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Ngày đặt: ${formatFirebaseDate(order.orderDate)}")
+                            Text("Tổng tiền: ${order.totalAmount} VND")
+                            Text("Trạng thái: ${order.status}", fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(8.dp))
+                            Text("Sản phẩm:", style = MaterialTheme.typography.titleSmall)
+                            // QUAY LẠI LẶP QUA LIST BÌNH THƯỜNG
+                            order.items.forEach {
+                                Text("- ${it.productName} (SL: ${it.quantity})")
+                            }
                         }
                     }
                 }
             }
         }
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = onReload, modifier = Modifier.fillMaxWidth()) {
-            Text("Tải lại")
-        }
     }
 }
-@Preview(showBackground = true, name = "Lịch sử đơn hàng - Preview")
-@Composable
-fun PreviewHistoryScreen() {
-    val sampleOrders = listOf(
-        OrderResponse(
-            id = 1,
-            fullName = "Nguyen Van A",
-            phone = "0987654321",
-            address = "HCM",
-            paymentMethod = "cash",
-            totalAmount = 320000,
-            orderDate = "2026-01-14",
-            items = listOf(
-                OrderResponse.Line(1, "Bò sốt tiêu đen", 160000, 1),
-                OrderResponse.Line(2, "Gà rang muối", 120000, 2)
-            )
-        )
-    )
-    val sampleState = HistoryState(orders = sampleOrders)
-
-    HistoryScreen(
-        state = sampleState,
-        onReload = {}
-    )
-}
-

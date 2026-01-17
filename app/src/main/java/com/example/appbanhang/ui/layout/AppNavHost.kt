@@ -1,6 +1,7 @@
 package com.example.appbanhang.ui.layout
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,32 +11,85 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.appbanhang.data.MonAn
+import com.example.appbanhang.ui.viewModel.AuthViewModel
+import com.example.appbanhang.ui.viewModel.AuthState
 import com.example.appbanhang.ui.viewModel.GioHangViewModel
 import com.example.appbanhang.ui.viewModel.HistoryViewModel
 import com.example.appbanhang.ui.viewModel.TrangChuViewModel
 
 @Composable
 fun AppNavHost(
+    authVM: AuthViewModel,
+    trangChuVM: TrangChuViewModel,
+    gioHangVM: GioHangViewModel,
+    historyVM: HistoryViewModel
+) {
+    val authState: AuthState by authVM.authState.collectAsState()
+
+    if (authState.isAuthenticated) {
+        MainNavigation(authVM, trangChuVM, gioHangVM, historyVM)
+    } else {
+        AuthNavigation(authVM)
+    }
+}
+
+@Composable
+fun AuthNavigation(authVM: AuthViewModel) {
+    val navController = rememberNavController()
+    val authState: AuthState by authVM.authState.collectAsState()
+
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                authState = authState,
+                onLogin = { username, pass -> authVM.login(username, pass) },
+                onNavigateToRegister = { navController.navigate("register") }
+            )
+        }
+        composable("register") {
+            RegisterScreen(
+                authState = authState,
+                onRegister = { username, pass, fullName, phone, address -> 
+                    authVM.signUp(username, pass, fullName, phone, address)
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun MainNavigation(
+    authVM: AuthViewModel, // Thêm AuthViewModel
     trangChuVM: TrangChuViewModel,
     gioHangVM: GioHangViewModel,
     historyVM: HistoryViewModel
 ) {
     val navController = rememberNavController()
+    val authState by authVM.authState.collectAsState()
     val homeState by trangChuVM.state.collectAsState()
     val cartState by gioHangVM.state.collectAsState()
     val historyState by historyVM.state.collectAsState()
 
-    androidx.compose.material3.Scaffold(
+    Scaffold(
         bottomBar = {
-            val currentRoute = navController.currentDestination?.route ?: ""
-            BottomBar(currentRoute) { navController.navigate(it) }
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: "home"
+            BottomBar(currentRoute) { route ->
+                navController.navigate(route) {
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
+            }
         }
-    ) { innerPadding ->   // đổi tên biến cho rõ ràng
+    ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = "home",
-            modifier = Modifier.padding(innerPadding) // dùng innerPadding ở đây
+            modifier = Modifier.padding(innerPadding)
         ) {
             composable("home") {
                 HomeScreen(
@@ -44,28 +98,25 @@ fun AppNavHost(
                     onReload = { trangChuVM.taiDanhSach() },
                     onSelectItem = { monAn ->
                         navController.navigate("detail/${monAn.id}")
-
                     }
                 )
             }
             composable(
                 "detail/{id}",
-                arguments = listOf(
-                    navArgument("id") { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument("id") { type = NavType.StringType })
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id") ?: ""
-                // Lấy chi tiết món ăn từ ViewModel bằng id
                 val monAn = trangChuVM.layMonAnTheoId(id)
-                monAn?.let { ProductDetailScreen( monAn = it, onAddToCart = { gioHangVM.them(it) } ) }
+                monAn?.let { ProductDetailScreen(monAn = it, onAddToCart = { gioHangVM.them(it) }) }
             }
             composable("cart") {
                 CartScreen(
                     state = cartState,
+                    currentUser = authState.currentUser, // Truyền người dùng hiện tại
                     onUpdateQuantity = { item, qty -> gioHangVM.capNhatSoLuong(item, qty) },
                     onRemoveItem = { gioHangVM.xoa(it) },
-                    onPlaceOrder = { hoTen, sdt, diaChi, thanhToan ->
-                        gioHangVM.datHang(hoTen, sdt, diaChi, thanhToan)
+                    onPlaceOrder = { customer, paymentMethod ->
+                        gioHangVM.datHang(customer, paymentMethod)
                     }
                 )
             }

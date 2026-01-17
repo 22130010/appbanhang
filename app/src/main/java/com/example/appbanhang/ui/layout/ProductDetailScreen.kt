@@ -18,10 +18,10 @@ fun ProductDetailScreen(
     onAddToCart: (MonAn) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        monAn.hinhAnh?.let { url ->
+        monAn.image_url?.let { url ->
             AsyncImage(
                 model = url,
-                contentDescription = monAn.ten,
+                contentDescription = monAn.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
@@ -29,11 +29,11 @@ fun ProductDetailScreen(
             Spacer(Modifier.height(12.dp))
         }
 
-        Text(monAn.ten, style = MaterialTheme.typography.titleLarge)
+        Text(monAn.name, style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
-        Text("${monAn.gia} VND", style = MaterialTheme.typography.titleMedium)
+        Text("${monAn.price} VND", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
-        Text(monAn.moTa ?: "Không có mô tả", style = MaterialTheme.typography.bodyMedium)
+        Text(monAn.description ?: "Không có mô tả", style = MaterialTheme.typography.bodyMedium)
 
         Spacer(Modifier.height(16.dp))
         Button(onClick = { onAddToCart(monAn) }, modifier = Modifier.fillMaxWidth()) {
@@ -46,10 +46,10 @@ fun ProductDetailScreen(
 fun PreviewProductDetailScreen() {
     val sampleProduct = MonAn(
         id = "1",
-        ten = "Bò sốt tiêu đen",
-        gia = 160000,
-        moTa = "Món ăn đặc biệt với hương vị đậm đà",
-        hinhAnh = null
+        name = "Bò sốt tiêu đen",
+        price = 160000,
+        description = "Món ăn đặc biệt với hương vị đậm đà",
+        image_url = null
     )
     ProductDetailScreen(
         monAn = sampleProduct,
