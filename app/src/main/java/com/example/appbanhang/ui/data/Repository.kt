@@ -74,8 +74,9 @@ object Repository {
         return orderId
     }
 
-    suspend fun fetchOrders(): List<FirebaseOrder> {
-        val snapshot = orderRef.get().await()
+    // THAY ĐỔI: Hàm này giờ nhận vào customerId để lọc đơn hàng
+    suspend fun fetchOrders(customerId: String): List<FirebaseOrder> {
+        val snapshot = orderRef.orderByChild("customerId").equalTo(customerId).get().await()
         return snapshot.children.mapNotNull { it.getValue(FirebaseOrder::class.java) }.sortedByDescending { it.orderDate }
     }
 }

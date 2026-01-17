@@ -64,7 +64,7 @@ fun AuthNavigation(authVM: AuthViewModel) {
 
 @Composable
 fun MainNavigation(
-    authVM: AuthViewModel, // Thêm AuthViewModel
+    authVM: AuthViewModel,
     trangChuVM: TrangChuViewModel,
     gioHangVM: GioHangViewModel,
     historyVM: HistoryViewModel
@@ -112,7 +112,7 @@ fun MainNavigation(
             composable("cart") {
                 CartScreen(
                     state = cartState,
-                    currentUser = authState.currentUser, // Truyền người dùng hiện tại
+                    currentUser = authState.currentUser,
                     onUpdateQuantity = { item, qty -> gioHangVM.capNhatSoLuong(item, qty) },
                     onRemoveItem = { gioHangVM.xoa(it) },
                     onPlaceOrder = { customer, paymentMethod ->
@@ -123,7 +123,8 @@ fun MainNavigation(
             composable("history") {
                 HistoryScreen(
                     state = historyState,
-                    onReload = { historyVM.taiHistory() }
+                    customerId = authState.currentUser?.id ?: "", // Lấy ID của người dùng hiện tại
+                    onReload = { customerId -> historyVM.taiHistory(customerId) } // Truyền ID vào hàm reload
                 )
             }
         }

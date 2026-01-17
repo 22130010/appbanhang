@@ -21,12 +21,18 @@ class HistoryViewModel : ViewModel() {
     private val _state = MutableStateFlow(HistoryState())
     val state: StateFlow<HistoryState> = _state.asStateFlow()
 
-    fun taiHistory() {
+    // THAY ĐỔI: Hàm này giờ nhận customerId
+    fun taiHistory(customerId: String) {
+        if (customerId.isBlank()) {
+            _state.update { it.copy(error = "Không tìm thấy thông tin người dùng.") }
+            return
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                // Gọi Repository mới làm việc với Firebase
-                val orders = Repository.fetchOrders()
+                // Gọi Repository với customerId
+                val orders = Repository.fetchOrders(customerId)
                 _state.update { it.copy(isLoading = false, orders = orders) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message ?: "Lỗi không xác định") }

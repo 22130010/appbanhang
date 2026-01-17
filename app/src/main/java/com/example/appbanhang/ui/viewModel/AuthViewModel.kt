@@ -73,8 +73,17 @@ class AuthViewModel : ViewModel() {
                     _authState.value = AuthState(error = "Tên đăng nhập đã tồn tại.")
                     return@launch
                 }
+                
+                // Bước 1: Tạo ID mới trước
+                val newUserId = database.push().key
+                if (newUserId == null) {
+                    _authState.value = AuthState(error = "Không thể tạo ID người dùng mới.")
+                    return@launch
+                }
 
+                // Bước 2: Tạo đối tượng Customer với ID đã có
                 val newCustomer = Customer(
+                    id = newUserId, // Gán ID ngay từ đầu
                     username = username,
                     password = pass, // CẢNH BÁO: Lưu mật khẩu dạng văn bản thuần!
                     full_name = fullName,
@@ -82,15 +91,13 @@ class AuthViewModel : ViewModel() {
                     address = address,
                     role = "USER"
                 )
+
+                // Bước 3: Lưu đối tượng hoàn chỉnh lên Firebase
+                database.child(newUserId).setValue(newCustomer).await()
                 
-                val newUserId = database.push().key
-                if (newUserId != null) {
-                    database.child(newUserId).setValue(newCustomer).await()
-                    newCustomer.id = newUserId
-                    _authState.value = AuthState(isAuthenticated = true, currentUser = newCustomer)
-                } else {
-                    _authState.value = AuthState(error = "Không thể tạo người dùng mới.")
-                }
+                // Bước 4: Cập nhật trạng thái thành công
+                _authState.value = AuthState(isAuthenticated = true, currentUser = newCustomer)
+
             } catch (e: Exception) {
                 _authState.value = AuthState(error = e.message)
             }

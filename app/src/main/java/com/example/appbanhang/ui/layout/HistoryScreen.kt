@@ -28,17 +28,19 @@ fun formatFirebaseDate(dateString: String): String {
 @Composable
 fun HistoryScreen(
     state: HistoryState,
-    onReload: () -> Unit
+    customerId: String, // Nhận vào customerId
+    onReload: (String) -> Unit // onReload giờ cũng nhận customerId
 ) {
-    LaunchedEffect(Unit) {
-        onReload()
+    // Tự động tải lại lịch sử khi màn hình được hiển thị lần đầu hoặc khi customerId thay đổi
+    LaunchedEffect(customerId) {
+        onReload(customerId)
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Lịch sử đặt hàng", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
-            IconButton(onClick = onReload) {
+            IconButton(onClick = { onReload(customerId) }) {
                 // Thêm icon refresh nếu muốn
             }
         }
@@ -54,7 +56,7 @@ fun HistoryScreen(
             }
         } else if (state.orders.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Chưa có đơn hàng nào.")
+                Text("Bạn chưa có đơn hàng nào.")
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -68,7 +70,6 @@ fun HistoryScreen(
                             Text("Trạng thái: ${order.status}", fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(8.dp))
                             Text("Sản phẩm:", style = MaterialTheme.typography.titleSmall)
-                            // QUAY LẠI LẶP QUA LIST BÌNH THƯỜNG
                             order.items.forEach {
                                 Text("- ${it.productName} (SL: ${it.quantity})")
                             }
