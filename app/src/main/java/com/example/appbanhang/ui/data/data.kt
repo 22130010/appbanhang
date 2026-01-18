@@ -19,3 +19,13 @@ data class DonHang(
     val tongTien: Int,
     val thanhToan: String
 )
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
+
+data class RegisterRequest(
+    val username: String,
+    val password: String,
+    val repassword: String
+)
